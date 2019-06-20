@@ -18,21 +18,11 @@ def get_sepsis_score(data_mat, clf):
     # convert d to dataframe from numpy
     varofint = ['HR','O2Sat','Temp','SBP','MAP','DBP']
     d = pd.DataFrame(data=data_mat[:,0:6], columns=varofint)
-    interpD = d[varofint].transform(lambda x: x.interpolate(limit=25,limit_direction='both') )
+    sepD = d[varofint].transform(lambda x: x.interpolate(limit=25,limit_direction='both') )
     if data_mat.shape[0] > 3:
-        rollsumD = interpD[varofint].rolling(3, min_periods=1).sum().reset_index()
-        rollsumD = rollsumD.fillna(0)
-        rollvarD = interpD[varofint].rolling(3, min_periods=1).var().reset_index()
-        rollvarD = rollvarD.fillna(0)
-        rollmaxD = interpD[varofint].rolling(3, min_periods=1).max().reset_index()
-        rollmaxD = rollmaxD.fillna(0)
-        rollminD = interpD[varofint].rolling(3, min_periods=1).min().reset_index()
-        rollminD = rollminD.fillna(0)
-
-        # evaluation by rolling method
         nameL = ['sumHR','sumO2','sumTemp','sumSP','sumMAP','sumDP', 'varHR','varO2','varTemp','varSP','varMAP','varDP','maxHR','maxO2','maxTemp','maxSP','maxMAP','maxDP',         'minHR','minO2','minTemp','minSP','minMAP','minDP']
 
-        sepD = interpD
+        #sepD = interpD
         rollsumD = sepD[varofint].rolling(3, min_periods=1).sum().reset_index()
         rollsumD = rollsumD.fillna(0)
         rollvarD = sepD[varofint].rolling(3, min_periods=1).var().reset_index()
@@ -42,12 +32,13 @@ def get_sepsis_score(data_mat, clf):
         rollminD = sepD[varofint].rolling(3, min_periods=1).min().reset_index()
         rollminD = rollminD.fillna(0)
     else:
-        return 0.85, 0
+        #print(0.5,0)
+        return 0.5, 0
     rowN = sepD.shape[0]
     y = np.zeros(rowN)
     proba = np.zeros(rowN)
     for i in range(rowN):
-        featureD = pd.DataFrame(columns=['sumHR','sumO2','sumTemp','sumSP','sumMAP','sumDP', 'varHR','varO2','varTemp','varSP','varMAP','varDP',                            'maxHR','maxO2','maxTemp','maxSP','maxMAP','maxDP',                            'minHR','minO2','minTemp','minSP','minMAP','minDP'])
+        featureD = pd.DataFrame(columns=['sumHR','sumO2','sumTemp','sumSP','sumMAP','sumDP', 'varHR','varO2','varTemp','varSP','varMAP','varDP','maxHR','maxO2','maxTemp','maxSP','maxMAP','maxDP',                            'minHR','minO2','minTemp','minSP','minMAP','minDP'])
         if (i+12) < rowN and y[i-1]!=1 and i>0 :
             rollsum = rollsumD[i:i+11]
             rollvar = rollvarD[i:i+11]
@@ -57,7 +48,7 @@ def get_sepsis_score(data_mat, clf):
             new_dict = dict(zip(nameL, valL))
             featureD = featureD.append(new_dict, ignore_index=True)
             prob = clf.predict_proba(featureD)[0][0]
-            y[i] = 0 if prob > 0.5 else 1
+            y[i] = 0 if prob > 0.8 else 1
             proba[i] = prob
         elif (i==0):
             proba[i]=1
@@ -67,9 +58,10 @@ def get_sepsis_score(data_mat, clf):
             new_dict = dict(zip(nameL, valL))
             featureD = featureD.append(new_dict, ignore_index=True)
             prob = clf.predict_proba(featureD)[0][0]
-            y[i] = 0 if prob > 0.5 else 1
+            y[i] = 0 if prob > 0.8 else 1
             proba[i] = prob
         else:
             y[i] = y[i-1]
             proba[i] = proba[i-1]
-    return proba[0], y[0]
+    #print(proba[i],y[i])
+    return proba[i], y[i]
