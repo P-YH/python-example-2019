@@ -17,7 +17,7 @@ def load_sepsis_model():
 def get_sepsis_score(data_mat, clf):
     # convert d to dataframe from numpy
     varofint = ['HR','O2Sat','Temp','SBP','MAP','DBP']
-    d = pd.DataFrame(data=data_mat[:,0:6], columns=varofint)
+    d = pd.DataFrame(data=data_mat[-24:,0:6], columns=varofint)#select only the latest 48 hours
     sepD = d[varofint].transform(lambda x: x.interpolate(limit=25,limit_direction='both') )
     if data_mat.shape[0] > 3:
         nameL = ['sumHR','sumO2','sumTemp','sumSP','sumMAP','sumDP', 'varHR','varO2','varTemp','varSP','varMAP','varDP','maxHR','maxO2','maxTemp','maxSP','maxMAP','maxDP',         'minHR','minO2','minTemp','minSP','minMAP','minDP']
